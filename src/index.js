@@ -10,14 +10,23 @@ import {
 // redux周边
 import { createStore, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
-import thunk from 'redux-thunk'
-import promise from 'redux-promise'
+import thunkMiddleware from 'redux-thunk'
+import promiseMiddleware from 'redux-promise'
+
+// redux-saga
+import createSagaMiddleware from 'redux-saga'
+import mySaga from './store/sagas'
 
 // reducers
 import reducers from './store/reducers'
 
+// create saga middleware
+const sagaMiddleware = createSagaMiddleware();
+
 // 注册store
-const store = createStore(reducers, applyMiddleware(thunk, promise));
+const store = createStore(reducers, applyMiddleware(thunkMiddleware, promiseMiddleware, sagaMiddleware));
+
+sagaMiddleware.run(mySaga);
 
 ReactDOM.render(
   <Provider store={store}>

@@ -1,3 +1,7 @@
+[toc]
+
+
+
 一个React数据流的自我学习小项目
 
 主要是`Redux`、`Mobx`
@@ -44,6 +48,8 @@ npm i @babel/plugin-proposal-decorators -S
 
 ## Redux
 
+将要学习的点：
+
 - `redux`
 - `react-redux`
 - `redux-thunk`
@@ -53,7 +59,21 @@ npm i @babel/plugin-proposal-decorators -S
 
 
 
-### Redux
+
+
+### Redux/Redux中间件
+
+- Redux是的诞生是为了给 React 应用提供「可预测化的状态管理」机制。
+
+- Redux会将整个应用状态(其实也就是数据)存储到到一个地方，称为`store`，这个`store`里面保存一棵状态树(state tree)
+
+- 组件改变 `state` 的唯一方法是通过调用`store.dispatch`方法，触发一个`action`，这个`action`被对应的`reducer`处理，于是`state`完成更新
+
+- 组件可以派发(`dispatch`)行为(`action`)给`store`,而不是直接通知其它组件
+
+- 其它组件可以通过订阅`store`中的状态(`state`)来刷新自己的视图
+
+
 
 首先Redux的流程图如下：
 
@@ -177,12 +197,13 @@ ReactDOM.render(
 - `connect`：该函数可以将 `store` 中的数据作为 `props` 绑定到组件上，接收两个参数（都是函数，并且函数有两个餐参数），第一个返回`state`，第2个用于`dispatch`发送`action`。返回的函数接受当前组件。
 
 ```js
-connect((state, ownProps) => {
-  // state 就是 store 自动执行，通过reducers得到新的。ownProps就是当前组件自己的props属性
+function mapStateToProps(state, ownProps) {
+    // state 就是 store 自动执行，通过reducers得到新的。ownProps就是当前组件自己的props属性
   return {
     list: state
   }
-}, (dispatch, ownProps) => {
+}
+function mapDispatchToProps(dispatch, ownProps) {
   //dispatch参数就是stroe.dispatch函数，可以用于发送action
   return {
     getData() {
@@ -191,8 +212,13 @@ connect((state, ownProps) => {
       })
     }
   }
-})
+}
+// 接收两个函数作为参数，一个是state的映射，一个用于dispatch
+connect(mapStateToProps, mapDispatchToProps)
 ```
+
+- **mapStateToProps**：这个单词翻译过来就是把`state`映射到`props`中去 ,其实也就是把Redux中的数据映射到React中的`props`中去。
+- **mapDispatchToProps**：这个单词翻译过来就是就是把各种`dispatch`也变成了`props`让你可以直接使用
 
 ```jsx
 // views.jsx
@@ -392,7 +418,16 @@ connect(null, dispatch => {
 
 ### redux-actions
 
-`redux-actions`的第一大杀器就是**`createAction`**， 他会帮助我们生成规范的`action`，我们简单演示：
+`redux-actions`的第一大杀器就是**`createAction`**， 他会帮助我们生成规范的`action`:
+
+```js
+{
+  type: 'GET_ACTIONS_DATA',
+  payload: Promise
+}
+
+dispatch(action)
+```
 
 ```js
 connect(state => {
@@ -413,6 +448,7 @@ connect(state => {
           }, 3000)
         })
       });
+      console.log(activet())   // { type: 'GET_ACTIONS_DATA', payload: Promise }
       dispatch(activet())
     }
   }
@@ -456,6 +492,32 @@ export default handleActions({
 ### redux-saga
 
 
+
+
+
+
+
+
+
+实际上 redux-saga 所有的任务都通用 yield Effects 来完成。它为各项任务提供了各种 Effect 创建器，可以是：
+
+- 调用一个异步函数；
+- 发起一个 action 到 Store；
+- 启动一个后台任务或者等待一个满足某些条件的未来的 action。
+
+
+
+
+
+### 总结
+
+- redux是一个可预测的状态容器，
+- react-redux是将store和react结合起来，使得数据展示和修改对于react项目而言更简单
+- redux中间件就是在dispatch action前对action做一些处理
+- redux-thunk用于对异步做操作
+- redux-actions用于简化redux操作
+- redux-promise可以配合redux-actions用来处理Promise对象，使得异步操作更简单
+- redux-saga可以起到一个控制器的作用，集中处理边际效用，并使得异步操作的写法更优雅。
 
 ## Mobx
 

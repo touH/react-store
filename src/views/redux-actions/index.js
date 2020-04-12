@@ -50,6 +50,7 @@ export default connect(state => {
           }, 3000)
         })
       });
+      console.log('redux-actions的action：', activet());
       dispatch(activet())
     },
     getActionsData() {
