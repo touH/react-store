@@ -77,7 +77,7 @@ npm i @babel/plugin-proposal-decorators -S
 
 首先Redux的流程图如下：
 
-![Redux流程图](https://github.com/touH/react-store/raw/master/images/redux流程图.png)
+![Redux流程图](https://github.com/touH/react-store/blob/master/images/redux%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
 
 **三大原则**：
 
@@ -493,7 +493,7 @@ export default handleActions({
 
 redux-saga相当于在Redux原有数据流中多了一层，对Action进行监听，捕获到监听的Action后可以派生一个新的任务对state进行维护（当然也不是必须要改变State，可以根据项目的需求设计），通过更改的state驱动View的变更。
 
-![redux-saga流程图](https://github.com/touH/react-store/raw/master/images/redux-saga.png)
+![redux-saga流程图](https://github.com/touH/react-store/blob/master/images/redux-saga.png)
 
 #### 核心API
 
