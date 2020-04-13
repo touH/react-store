@@ -77,7 +77,7 @@ npm i @babel/plugin-proposal-decorators -S
 
 首先Redux的流程图如下：
 
-![Redux流程图](/images/redux流程图.png)
+![Redux流程图](https://github.com/touH/react-store/raw/master/images/redux流程图.png)
 
 **三大原则**：
 
@@ -91,10 +91,10 @@ npm i @babel/plugin-proposal-decorators -S
 
 ```js
 /*
-	reducers.js
-	注意 
-		1. 函数返回的值 必须是一个新的副本，不要直接返回state，要返回一个副本
-		2. 纯函数，不要在内部做业务代码，主要用于返回数据
+    reducers.js
+    注意 
+    1. 函数返回的值 必须是一个新的副本，不要直接返回state，要返回一个副本
+    2. 纯函数，不要在内部做业务代码，主要用于返回数据
 */
 
 let initState = [];
@@ -126,8 +126,8 @@ export const action1 = {
 }
 
 /* 
-	也可以是一个函数，不过在外部调用这个函数必须执行，确保原生的store.dispatch({type: 'xx'})中的参数是一个对象,
-	并且该对象必须规定其中有 type 属性
+    也可以是一个函数，不过在外部调用这个函数必须执行，确保原生的store.dispatch({type: 'xx'})中的参数是一个对象,
+    并且该对象必须规定其中有 type 属性
 */
 export const action2 = params => ({
   type: 'GET_ALL_DATA',
@@ -230,11 +230,11 @@ class myComponent extends React.Component {
   componentDidMount() {
     const { getData, list } = this.props;		//从props中获取到connect方法参数中函数返回的结果
     getData('可以传入参数')
-	}
+  }
   
   render() {
-		return <div></div>
-	}
+    return <div></div>
+  }
 }
 
 //通过connect这个函数允许我们将 store 中的数据作为 props 绑定到组件上。
@@ -249,7 +249,7 @@ export default connect((state, ownProps) => {
         type: 'GET_DATA',
         params
       })
-		}
+    }
   }
 })(myComponent)
 ```
@@ -493,7 +493,7 @@ export default handleActions({
 
 redux-saga相当于在Redux原有数据流中多了一层，对Action进行监听，捕获到监听的Action后可以派生一个新的任务对state进行维护（当然也不是必须要改变State，可以根据项目的需求设计），通过更改的state驱动View的变更。
 
-![redux-saga流程图](/images/redux-saga.png)
+![redux-saga流程图](https://github.com/touH/react-store/raw/master/images/redux-saga.png)
 
 #### 核心API
 
@@ -594,7 +594,7 @@ function* getData(action) {
 
 
 function* watchFetchData() {
-	// 即view中多次点击触发dispatch，发送action，都会被takeEvery监听到，然后执行几次，这里就触发几次, 如点击9次就触发9次
+  // 即view中多次点击触发dispatch，发送action，都会被takeEvery监听到，然后执行几次，这里就触发几次, 如点击9次就触发9次
   yield takeEvery("GET_SAGA_DATA", getData)
   // 和takeEvery基本一样，不过takeLatest只会触发最后一次，前面的次数saga任务会全部取消，即在一定时间里快速点击9次，只触发了一次，而且是最后的那次
   yield takeLatest("GET_SAGA_DATA", getData)
@@ -649,7 +649,7 @@ take函数可以理解为监听未来的action，它创建了一个命令对象�
 ```js
 function* watchFetchData() {
    while(true) {
-   // 监听一个type为 'FETCH_REQUESTED' 的action的执行，直到等到这个Action被触发，才会接着执行下面的 		yield fork(fetchData)  语句
+     // 监听一个type为 'FETCH_REQUESTED' 的action的执行，直到等到这个Action被触发，才会接着执行下面的 		yield fork(fetchData)  语句
      yield take('FETCH_REQUESTED');
      yield fork(fetchData);
    }
@@ -826,8 +826,6 @@ function* fetchUsersSaga {
 很好的一篇文章：[Redux-Saga 实用指北](https://juejin.im/post/5ad83a70f265da503825b2b4)
 
 Redux-saga官网：[英文文档](https://redux-saga.js.org/)、[繁体](https://neighborhood999.github.io/redux-saga/)
-
-
 
 ### 总结
 
