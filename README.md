@@ -77,7 +77,7 @@ npm i @babel/plugin-proposal-decorators -S
 
 首先Redux的流程图如下：
 
-![Redux流程图](./images/redux流程图.png)
+![Redux流程图](/images/redux流程图.png)
 
 **三大原则**：
 
@@ -491,21 +491,341 @@ export default handleActions({
 
 ### redux-saga
 
+redux-saga相当于在Redux原有数据流中多了一层，对Action进行监听，捕获到监听的Action后可以派生一个新的任务对state进行维护（当然也不是必须要改变State，可以根据项目的需求设计），通过更改的state驱动View的变更。
+
+![redux-saga流程图](/images/redux-saga.png)
+
+#### 核心API
+
+##### Middleware API
+
+###### createSagaMiddleware(options)
+
+创建一个 `Redux middleware`，并将 `Sagas` 连接到 `Redux Store`。
+
+- `options` : `Object` - 传递给 `middleware` 的选项列表。
+
+###### middleware.run(saga, ...args)
+
+动态执行 `saga`。用于 `applyMiddleware` 阶段之后执行 `Sagas`。这个方法返回一个`Task` 描述对象。
+
+```jsx
+import createSagaMiddleware from 'redux-saga'
+import mySaga from './store/sagas'
+
+const sagaMiddleware = createSagaMiddleware();
+
+const store = createStore(reducers, applyMiddleware(thunkMiddleware, promiseMiddleware, sagaMiddleware));
+
+sagaMiddleware.run(mySaga);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <Router basename='/'>
+      <App />
+    </Router>
+  </Provider>,
+  document.getElementById('root')
+);
+```
 
 
 
+##### Saga 辅助函数
+
+###### takeEvery
+
+`takeEvery`：在发起（`dispatch`）到 `Store` 并且匹配 `pattern` 的每一个 `action` 上派生一个 `saga`。简单来说就是监听所有的匹配到的 `action`。
+
+- 监听对应的 `action`；
+- 每一次 `dispatch` 都会触发；例如：点击一个新增的按钮，2s 后触发新增动作，在2s内不断点击按钮，这时候，每一次点击，都是有效的。
+
+###### takeLatest
+
+`takeLatest`：在发起到 `Store` 并且匹配 `pattern` 的每一个 `action` 上派生一个 `saga`。并自动取消之前所有已经启动但仍在执行中的 `saga` 任务。（即取最后一次，前面的全部取消）
+
+- 监听对应的 `action`；
+- 只会触发最后一次 `dispatch`；例如：点击一个新增的按钮，2s 后触发新增动作，在2s内不断点击按钮，这时候，只有最后一次点击是有效的。
+
+###### takeLeading
+
+`takeLeading`：在发起到 `Store` 并且匹配 `pattern` 的每一个 `action` 上派生一个 `saga`。 它将在派生一次任务之后阻塞，直到派生的 `saga` 完成，然后又再次开始监听指定的 `pattern`。（即只取第一次，后面的全部取消，直到第一次完成，才能继续新的点击）
+
+- 监听对应的 `action`；
+- 最后一次有效
+
+###### throttle
+
+`throttle`：保留临近的一次，即会有两次
+
+- 监听对应的 `action`；
+- 保留邻近的一次
+
+```js
+import { takeEvery, takeLatest, takeLeading, delay, put, call } from 'redux-saga/effects'
+
+// 接收一个参数action，为view层dispatch函数发送的action
+function* getData(action) {
+  try {
+    yield delay(2000)			//延迟2s
+    /*
+     * @description： call 会阻塞程序，只有内部代码执行好，才能往后面执行， 可以当成js的 await+call函数
+     * @params：第一个参数是一个函数或Generator函数，后面的参数是传给生成器函数的参数，类似js的call
+     */
+    let result = yield call(function* (params) {
+      return axios.post(url, params)
+    }, { id: 1 })
+    // put 类似于 redux中的 dispatch方法，用于传递action
+    yield put({
+      type: 'GET_DATA',
+      payload: {
+        data: result.data
+      }
+    })
+  } catch(e) {
+    yield put({
+      type: 'ERROR',
+      payload: {
+        msg: result.msg
+      }
+    })
+  }
+}
+
+
+function* watchFetchData() {
+	// 即view中多次点击触发dispatch，发送action，都会被takeEvery监听到，然后执行几次，这里就触发几次, 如点击9次就触发9次
+  yield takeEvery("GET_SAGA_DATA", getData)
+  // 和takeEvery基本一样，不过takeLatest只会触发最后一次，前面的次数saga任务会全部取消，即在一定时间里快速点击9次，只触发了一次，而且是最后的那次
+  yield takeLatest("GET_SAGA_DATA", getData)
+  // 同上，不过只取第一次，后面的次数都取消，第一次的完成了，再点击才有效
+  yield takeLeading('GET_SAGA_DATA', getData)
+}
+```
+
+**注意**：上面的 `takeEvery` 函数可以使用下面的写法替换
+
+```js
+function* watchFetchData() {
+  // 使用while循环，不然take只会触发一次
+   while(true){
+     yield take('GET_SAGA_DATA');  // 阻塞， 每次循环到这里就停止了，要等待view发送type为GET_SAGA_DATA的action，才会继续往下面执行
+     //fork函数 不会阻塞
+     yield fork(getData);
+   }
+}
+```
 
 
 
+##### Effect Creators：
+
+**effect**：
+
+一个 `effect` 就是一个纯文本 `javascript` 对象，包含一些将被 `saga middleware` 执行的指令。
+
+**task**：
+
+一个 `task` 就像是一个在后台运行的进程。在基于 `redux-saga` 的应用程序中，可以同时运行多个 `task`。通过 `fork` 函数来创建 `task`
+
+redux-saga框架提供了很多创建effect的函数，下面我们就来简单的介绍下开发中最常用的几种：
+
+- `take(pattern)   `阻塞
+- `put(action) ` 非阻塞
+- `call(fn, ...args) ` 阻塞
+- `fork(fn, ...args) ` 非阻塞
+- `select(selector, ...args)`
+
+阻塞调用的意思是，`Saga` 在 `yield Effect` 之后会等待其执行结果返回，结果返回后才会恢复执行 `Generator` 中的下一个指令。非阻塞调用的意思是，`Saga` 会在 `yield Effect` 之后立即恢复执行。
 
 
-实际上 redux-saga 所有的任务都通用 yield Effects 来完成。它为各项任务提供了各种 Effect 创建器，可以是：
+
+###### take(pattern)
+
+take函数可以理解为监听未来的action，它创建了一个命令对象，告诉middleware等待一个特定的action， Generator会暂停，直到一个与pattern匹配的action被发起，才会继续执行下面的语句，也就是说，take是一个阻塞的 effect。
+
+用法：
+
+```js
+function* watchFetchData() {
+   while(true) {
+   // 监听一个type为 'FETCH_REQUESTED' 的action的执行，直到等到这个Action被触发，才会接着执行下面的 		yield fork(fetchData)  语句
+     yield take('FETCH_REQUESTED');
+     yield fork(fetchData);
+   }
+}
+```
+
+
+
+###### put(action)
+
+put函数是用来发送action的 effect，你可以简单的**把它理解成为redux框架中的dispatch函数**，当put一个action后，reducer中就会计算新的state并返回，**注意：** **put 也是阻塞 effect**
+
+用法：
+
+```js
+export function* toggleItemFlow() {
+    let list = []
+    // 发送一个type为 'UPDATE_DATA' 的Action，用来更新数据，参数为 `data：list`
+    yield put({
+      type: actionTypes.UPDATE_DATA,
+      data: list
+    })
+}
+```
+
+
+
+###### call(fn, ...args)
+
+**call函数你可以把它简单的理解为就是可以调用其他函数的函数**，它命令 middleware 来调用fn 函数， args为函数的参数，**注意：**  **fn 函数可以是一个 Generator 函数，也可以是一个返回 Promise 的普通函数**，call 函数也是**阻塞 effect**
+
+用法：
+
+```js
+export function* removeItem() {
+  try {
+    // 这里call 函数就调用了 delay 函数，delay 函数为一个返回promise 的函数
+    return yield call(fetchData, {id: 1})
+  } catch (err) {
+    yield put({type: actionTypes.ERROR})
+  }
+}
+```
+
+
+
+###### fork(fn, ...args)
+
+fork 函数和 call 函数很像，都是用来调用其他函数的，但是fork函数是非阻塞函数，也就是说，程序执行完 yield fork(fn， args) 这一行代码后，会立即接着执行下一行代码语句，而不会等待fn函数返回结果后，在执行下面的语句。
+
+用法：
+
+```js
+import { fork } from 'redux-saga/effects'
+
+export default function* rootSaga() {
+  // 下面的四个 Generator 函数会一次执行，不会阻塞执行
+  yield fork(addItemFlow)
+  yield fork(removeItemFlow)
+  yield fork(toggleItemFlow)
+  yield fork(modifyItem)
+}
+```
+
+
+
+###### select(selector, ...args)
+
+select 函数是用来指示 middleware调用提供的选择器获取Store上的state数据，你也可以简单的把它理解为**redux框架中获取store上的 state数据一样的功能** ：`store.getState()`
+
+用法：
+
+```js
+export function* toggleItemFlow() {
+     // 通过 select effect 来获取 全局 state上的 `getTodoList` 中的 list
+     let tempList = yield select(state => state.getTodoList.list)
+     // 或者 直接获取 state
+     yield select()
+}
+```
+
+
+
+###### cancel和cancelled
+
+- `cancel(task)：创建一个 `Effect` 描述信息，用来命令 `middleware` 取消之前的一个分叉任务。
+- `cancelled()`：创建一个 `Effect`，用来命令 `middleware` 返回该 `generator` 是否已经被取消。通常你会在 `finally` 区块中使用这个 `Effect` 来运行取消时专用的代码。
+
+```js
+function* getDelayData(action) {
+  
+  // fork(fn, args) 不阻塞
+  let forkTask = yield fork(function* () {
+    try {
+      yield delay(3000);
+      yield put({
+        type: 'GET_SAGA_DATA',
+        payload: {
+          data: [111, 222, 333]
+        }
+      });
+    } catch (e) {
+      console.log('失败')
+    } finally {
+      const cancelResult = yield cancelled();   // cancelled函数 可以判断是否是取消了，取消了返回true， 否则返回false
+      console.log('是否中断forkTask, true为中断', cancelResult)
+    }
+  });
+  
+  // 监听 CANCEL_DELAY_GET_DATA action
+  yield take('CANCEL_DELAY_GET_DATA');    // 此处阻塞了， 当触发了这个action时，下面的代码才能执行，即点击了取消获取数据按钮。下面的cancel函数才能执行
+  yield cancel(forkTask);  // 取消forkTask
+  console.log('已取消')
+  
+}
+```
+
+
+
+###### all(effects)
+
+创建一个 `Effect` 描述信息，用来命令 `middleware` 并行地运行多个 `Effect`，并等待它们全部完成。这是与标准的 `Promise.all` 相当对应的 `API`。
+
+```js
+import { fetchCustomers, fetchProducts } from './path/to/api'
+import { all, call } from `redux-saga/effects`
+
+function* mySaga() {
+  // 对象写法
+  const { customers, products } = yield all({
+    customers: call(fetchCustomers),
+    products: call(fetchProducts)
+  })
+  // 数组写法
+  const arr = yield all({
+    call(fetchCustomers),
+    call(fetchProducts)
+  })
+}
+```
+
+
+
+###### race(effects)
+
+创建一个 `Effect` 描述信息，用来命令 `middleware` 在多个 `Effect` 间运行 竞赛（`Race`）（与 `Promise.race([...])` 的行为类似）。
+
+```js
+import { take, call, race } from `redux-saga/effects`
+import fetchUsers from './path/to/fetchUsers'
+
+function* fetchUsersSaga {
+  // 对象写法
+  const { response, cancel } = yield race({
+    response: call(fetchUsers),
+    cancel: take(CANCEL_FETCH)
+  })
+  // 数组写法
+  const arr = yield all({
+    call(fetchUsers),
+    take(CANCEL_FETCH)
+  })
+}
+```
+
+实际上 `redux-saga` 所有的任务都通用 yield Effects 来完成。它为各项任务提供了各种 Effect 创建器，可以是：
 
 - 调用一个异步函数；
-- 发起一个 action 到 Store；
-- 启动一个后台任务或者等待一个满足某些条件的未来的 action。
+- 发起一个 `action` 到 `Store`；
+- 启动一个后台任务或者等待一个满足某些条件的未来的 `action`。
 
 
+
+很好的一篇文章：[Redux-Saga 实用指北](https://juejin.im/post/5ad83a70f265da503825b2b4)
+
+Redux-saga官网：[英文文档](https://redux-saga.js.org/)、[繁体](https://neighborhood999.github.io/redux-saga/)
 
 
 
@@ -518,6 +838,8 @@ export default handleActions({
 - redux-actions用于简化redux操作
 - redux-promise可以配合redux-actions用来处理Promise对象，使得异步操作更简单
 - redux-saga可以起到一个控制器的作用，集中处理边际效用，并使得异步操作的写法更优雅。
+
+
 
 ## Mobx
 
