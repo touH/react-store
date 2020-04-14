@@ -154,7 +154,7 @@ export const action2 = params => {
 - 通过 [subscribe(listener)](http://cn.redux.js.org/docs/api/Store.html#subscribe) 注册监听器;
 - 通过 [subscribe(listener)](http://cn.redux.js.org/docs/api/Store.html#subscribe) 返回的函数注销监听器。
 
-再次强调一下 Redux 应用只有一个单一的 store。当需要拆分数据处理逻辑时，应该使用[combineReducers()](http://cn.redux.js.org/docs/api/combineReducers.html)函数来进行reducer 组合而不是创建多个 `store`。
+再次强调一下 Redux 应用只有一个单一的 `store`。当需要拆分数据处理逻辑时，应该使用[combineReducers()](http://cn.redux.js.org/docs/api/combineReducers.html)函数来进行`reducer` 组合而不是创建多个 `store`。
 
 ```js
 //store/reducers/index.js
@@ -416,7 +416,7 @@ connect(null, dispatch => {
 
 ## redux-actions
 
-`redux-actions`的第一大杀器就是**`createAction`**， 他会帮助我们生成规范的`action`:
+`redux-actions`的第一大杀器就是`createAction`， 他会帮助我们生成规范的`action`:
 
 ```js
 {
@@ -467,7 +467,7 @@ export default (state=[], action) => {
 }
 ```
 
-使用第二杀器，**`handleActions`**，这个函数就是帮助优化代码，我们的`reducer`里面显示是通过`switch case`语句去处理的，使用**`handleActions`**函数我们可以优化写法。
+使用第二杀器，`handleActions`，这个函数就是帮助优化代码，我们的`reducer`里面显示是通过`switch case`语句去处理的，使用`handleActions`函数我们可以优化写法。
 
 ```js
 // reducers 写法二
