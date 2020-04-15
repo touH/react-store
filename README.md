@@ -71,7 +71,7 @@ npm i @babel/plugin-proposal-decorators -S
 
 - 其它组件可以通过订阅`store`中的状态(`state`)来刷新自己的视图
 
-
+- 单一数据源，使用纯函数修改状态
 
 首先Redux的流程图如下：
 
@@ -152,7 +152,7 @@ export const action2 = params => {
 - 提供 [getState()](http://cn.redux.js.org/docs/api/Store.html#getState) 方法获取 state；
 - 提供 [dispatch(action)](http://cn.redux.js.org/docs/api/Store.html#dispatch) 方法更新 state；
 - 通过 [subscribe(listener)](http://cn.redux.js.org/docs/api/Store.html#subscribe) 注册监听器;
-- 通过 [subscribe(listener)](http://cn.redux.js.org/docs/api/Store.html#subscribe) 返回的函数注销监听器。
+- 通过执行 [subscribe(listener)](http://cn.redux.js.org/docs/api/Store.html#subscribe) 返回的函数注销监听器。
 
 再次强调一下 Redux 应用只有一个单一的 `store`。当需要拆分数据处理逻辑时，应该使用[combineReducers()](http://cn.redux.js.org/docs/api/combineReducers.html)函数来进行`reducer` 组合而不是创建多个 `store`。
 
@@ -492,6 +492,8 @@ export default handleActions({
 `redux-saga`相当于在Redux原有数据流中多了一层，对`Action`进行监听，捕获到监听的`Action`后可以派生一个新的任务对`state`进行维护（当然也不是必须要改变`State`，可以根据项目的需求设计），通过更改的`state`驱动View的变更。
 
 ![redux-saga流程图](http://q8puebmu1.bkt.clouddn.com/redux-saga.png?e=1586768136&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:1qhR7eX43umtkLhTFOzkdP6b3wI=&attname=)
+
+![redux-saga流程图2](http://q8puebmu1.bkt.clouddn.com/redux-saga2.png?e=1586872447&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:m6u9ObXl2z7jwpuuCT7P6s5YRZc=&attname=)
 
 ### Middleware API
 
@@ -837,6 +839,259 @@ Redux-saga官网：[英文文档](https://redux-saga.js.org/)、[繁体](https:/
 
 
 
+# Mobx
+
+配置，因为Mobx使用了装饰器，在react中，通过`.babelrc`即可配置es7的装饰器语法：
+
+```.babelrc
+{
+  "presets": [
+    "es2015",
+    "stage-1",
+    "react"
+  ],
+  "plugins": ["transform-decorators-legacy"]
+}
+```
+
+```
+npm i babel-preset-{es2015,stage-1,react} babel-plugin-transform-decorators-legacy
+```
+
+对于decorators，如果你使用`create-react-app`创建项目， 需要:
+
+```
+npm run ejet     # 显示 create-react-app 的配置文件
+```
+
+```
+npm i @babel/plugin-proposal-decorators
+```
+
+在`pakage.json`文件中添加
+
+```json
+"babel": {
+  "presets": [
+    "react-app"
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-proposal-decorators",
+      {
+        "legacy": true
+      }
+    ]
+  ]
+}
+```
+
 ## Mobx
 
-- `react-mobx`
+MobX 是一个非常优雅的状态管理库，它的理念是通过观察者模式对数据做出追踪处理，在对可观察属性的作出变更或者引用的时候，触发其依赖的监听函数。这一点和Vue通过`Object.defineProperty` ，在对状态进行读写操作的时候会触发其 getter 和 setter 函数以进行响应的原理其实是非常类似的。
+
+MobX背后的哲学很简单：**任何源自应用状态的东西都应该自动地获得。**译成人话就是状态只要一变，其他用到状态的地方就都跟着自动变。
+
+主要概念：
+
+- `actions`：一些改变状态值（state）的动作。
+- `state`：可观察的状态值
+- `computed value`：根据`state`，用pure function计算出来的值
+- `reactions`：因`state`或`computed value`变化而引起的反应，主要指视图UI重新渲染
+
+![mobx流程图](http://q8puebmu1.bkt.clouddn.com/mobx流程图.png?e=1586955817&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:B0ofbsGA9pByTfeuwuoIeAZ4KPE=&attname=)
+
+![mobx流程图2](http://q8puebmu1.bkt.clouddn.com/mobx%E6%B5%81%E7%A8%8B%E5%9B%BE2.png?e=1586969482&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:pEBBMPgqrkrx6sIentMr6iUDHXY=&attname=)
+
+在整个数据流中，通过事件驱动（UI 事件、网络请求…）触发 Actions，在 Actions 中修改了 State 中的值，这里的 State 即应用中的 store 树（存储数据），然后根据新的 State 中的数据计算出所需要的计算属性（computed values）值，最后响应（react）到 UI 视图层。
+
+```js
+const { observable, action, autorun } = require('mobx');
+
+class Store {
+    count = 0;
+    @action add () {
+        this.count = ++this.count;
+    }
+}
+const mstore = new Store();
+setInterval(() => {
+    mstore.add();
+}, 800);
+autorun(() => {
+    console.log(mstore.count);
+});
+
+//使用 autorun 的时候调用了一次其传入的函数，之后 mstore.count 的值即使改变也并没有触发观察，这是因为 mstore.count 并不是可观察的
+@observable count = 0;   //改变时就会自动执行autorun函数了，因为内部有count这个被观测者
+```
+
+常用API：
+
+- `observable`：`@observable` 将一个变量变得可观察
+- `autorun`：`@autorun` 常用于组件类或`store`类的`constructor`里，用来创建实例时，可监视其函数参数里使用的可观察变量，从而作出相应`reactions`，一般是将函数再执行一遍。
+- `when`：`@when` 有条件的`@autorun`
+- `computed`：`@computed `通过可观察变量经过纯函数计算得来的值，使用时才会计算，没有使用时不会去计算
+- `action`：`@action` 能改变可观察变量值的操作（一般是函数方法）
+
+
+
+### observable
+
+`observable` 的属性值在其变化的时候 ，mobx 会自动追踪并作出响应。其语法为：
+
+```js
+import {observable} from "mobx";
+import { observer } from "mobx-react";
+@observable  classProperty = value
+```
+
+其核心原理是 `Object.defineProperty` ，给被包装的属性套上 getter 和 setter 的钩子，在 get 中响应依赖收集，在 set 中触发监听函数。
+
+
+
+### computed
+
+```
+语法形式: @computed get computesValue [function]；
+```
+
+```js
+class TodoList {
+  @observable todos = [];
+	// unfinishedTodoCount 受 todos 影响
+  @computed get unfinishedTodoCount() {
+    return this.todos.filter(todo => !todo.finished).length;
+  }
+}
+```
+
+
+
+### action
+
+`@action`是mobx提供的，其规定对于 store 对象中所有可观察状态属性的改变都应该在 `@action` 中完成，凡是涉及到对应用状态变量修改的函数，都应该使用`@action`修饰符。从上图也可以看出，action会触发状态的改变：
+
+```
+语法形式：@action actionFuncName[function]
+```
+
+```js
+const { observable, action, computed, autorun } = require('mobx');
+
+class Store {
+    @observable list = []
+    @computed get total() {
+        return this.list.length;
+    }
+   @action change (i) {
+        this.list.push(i++);
+    }
+}
+const mstore = new Store();
+autorun(() => {
+    console.log(mstore.total);
+});
+mstore.change(1)
+```
+
+
+
+### autorun
+
+`autorun`用来包装一个方法为 观察者。
+
+在上面的例子中，当触发了可观察状态属性的改变后，其变化的监听则是在传入 autorun 函数中作出响应。
+
+`autorun`传入一个函数，当该函数中依赖的可观察状态属性（或者计算属性）发生变化的时候，该函数会被调用。这个函数只会观察自己依赖到的设为 `observable` 的值。
+
+例子在上方。
+
+
+
+## mobx-react
+
+### observer
+
+`@observer` 是`mobx-react`提供的，通过使用`@observer`，将react组件转换成一个监听者，这样在被监听的应用状态变量(Observable)有更新时，react组件就会重新渲染。当 render 中的 state发生改变时， `mobx-react` 会重新调用 render 方法，重新渲染这个组件。
+
+`observer`通过es7的装饰器模式，将一个React组件作为参数，并将其转为响应式（Reactive）组件。
+
+```js
+import {observable} from "mobx";
+import { observer } from "mobx-react";
+
+class Store {
+    id
+    @observable title;
+    @observable completed;
+    ......
+}
+
+@observer
+class App extends React.Component {
+    .....
+    render() {
+      	const { title, completed } = this.props;
+        return (
+            ....
+        );
+    }
+}
+```
+
+
+
+### Provider组件
+
+在react中，`mobx-react`提供了 Provider 组件用来包裹最外层组件节点，并且传入 store（通过）context 传递给后代组件：
+
+```js
+import { Provider } from 'mobx-react';
+const stores = {
+  ...
+};
+ReactDOM.render((
+  <Provider {...stores}>    // <Provider store={stores}>
+    <App />
+  </Provider>
+), document.getElementById('root'));
+```
+
+
+
+### Inject
+
+`@inject` 是为了向当前被装饰的组件 注入 `store` 这个`props`。当然 store 这个 prop 其实是由 Provider 提供的。用于在任何组件中可以直接在`props`中获取内容
+
+```js
+@inject('store')
+@observer
+class MobxTest extends Component {
+  static propTypes = {
+    store: PropTypes.shape({
+      todos: mobxPropTypes.observableArrayOf(PropTypes.string)
+    }).isRequired
+  };
+  state = {
+    ...
+  };
+  render() {
+    let { store } = this.props;
+    return <div>
+      ...
+    </div>
+  }
+}
+```
+
+
+
+
+
+[回到顶部](#依赖)
+
+# 参考链接
+
+一篇很好的文章 [Vuex、Flux、Redux、Redux-saga、Dva、MobX](https://juejin.im/post/5c18de8ef265da616413f332)
+
