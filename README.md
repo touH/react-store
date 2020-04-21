@@ -75,7 +75,7 @@ npm i @babel/plugin-proposal-decorators -S
 
 首先Redux的流程图如下：
 
-![Redux流程图](http://q8puebmu1.bkt.clouddn.com/redux%E6%B5%81%E7%A8%8B%E5%9B%BE.png?e=1586768136&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:Q4Htqg4PW3aGqD5CFv8Z-HEwV2k=&attname=)
+![Redux流程图](http://q94j7s0e9.bkt.clouddn.com/redux%E6%B5%81%E7%A8%8B%E5%9B%BE.png?e=1587452691&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:wQYxpFSfC9Y9vt9NJlJsxGiM5Gc=&attname=)
 
 **三大原则**：
 
@@ -491,9 +491,9 @@ export default handleActions({
 
 `redux-saga`相当于在Redux原有数据流中多了一层，对`Action`进行监听，捕获到监听的`Action`后可以派生一个新的任务对`state`进行维护（当然也不是必须要改变`State`，可以根据项目的需求设计），通过更改的`state`驱动View的变更。
 
-![redux-saga流程图](http://q8puebmu1.bkt.clouddn.com/redux-saga.png?e=1586768136&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:1qhR7eX43umtkLhTFOzkdP6b3wI=&attname=)
+![redux-saga流程图](http://q94j7s0e9.bkt.clouddn.com/redux-saga.png?e=1587452691&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:FPvUzYnRUMTJ9ok2Z_I5vWdFEXA=&attname=)
 
-![redux-saga流程图2](http://q8puebmu1.bkt.clouddn.com/redux-saga2.png?e=1586872447&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:m6u9ObXl2z7jwpuuCT7P6s5YRZc=&attname=)
+![redux-saga流程图2](http://q94j7s0e9.bkt.clouddn.com/redux-saga2.png?e=1587452691&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:yNadZTsKolNEtGoTX4XmdjlsfR0=&attname=)
 
 ### Middleware API
 
@@ -899,9 +899,9 @@ MobX背后的哲学很简单：**任何源自应用状态的东西都应该自�
 - `computed value`：根据`state`，用pure function计算出来的值
 - `reactions`：因`state`或`computed value`变化而引起的反应，主要指视图UI重新渲染
 
-![mobx流程图](http://q8puebmu1.bkt.clouddn.com/mobx流程图.png?e=1586955817&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:B0ofbsGA9pByTfeuwuoIeAZ4KPE=&attname=)
+![mobx流程图](http://q94j7s0e9.bkt.clouddn.com/mobx%E6%B5%81%E7%A8%8B%E5%9B%BE.png?e=1587452691&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:VUtRPw3fwQEahD_b8Ok7TQ_CWPg=&attname=)
 
-![mobx流程图2](http://q8puebmu1.bkt.clouddn.com/mobx%E6%B5%81%E7%A8%8B%E5%9B%BE2.png?e=1586969482&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:pEBBMPgqrkrx6sIentMr6iUDHXY=&attname=)
+![mobx流程图2](http://q94j7s0e9.bkt.clouddn.com/mobx流程图2.png?e=1587452691&token=BuOchmXNpNDje7H9LvOL_4Xx2zH8ril3ojj1XL8v:xjCjQy7HC-aloVyN7fMeQBLes-E=&attname=)
 
 在整个数据流中，通过事件驱动（UI 事件、网络请求…）触发 Actions，在 Actions 中修改了 State 中的值，这里的 State 即应用中的 store 树（存储数据），然后根据新的 State 中的数据计算出所需要的计算属性（computed values）值，最后响应（react）到 UI 视图层。
 
