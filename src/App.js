@@ -6,8 +6,6 @@ import {
 } from 'react-router-dom'
 import { withRouter } from "react-router";
 
-import { observer, inject } from 'mobx-react'
-
 import './App.css'
 import { Menu } from 'antd';
 
