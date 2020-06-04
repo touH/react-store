@@ -215,6 +215,17 @@ function mapDispatchToProps(dispatch, ownProps) {
 connect(mapStateToProps, mapDispatchToProps)
 ```
 
+`mapDispatchToProps` 也可以是一个对象
+
+```js
+// mapDispatchToProps 也可以是一个对象
+import { setLogin } from './actions'
+
+const mapDispatchToProps = {
+	setLogin
+}
+```
+
 - **mapStateToProps**：这个单词翻译过来就是把`state`映射到`props`中去 ,其实也就是把Redux中的数据映射到React中的`props`中去。
 - **mapDispatchToProps**：这个单词翻译过来就是就是把各种`dispatch`也变成了`props`让你可以直接使用
 
